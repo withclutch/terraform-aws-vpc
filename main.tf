@@ -129,6 +129,8 @@ locals {
 }
 
 resource "aws_route_table" "public" {
+  #for_each = local.create_public_subnets ? local.num_public_route_tables : 0
+  #for_each = local.create_public_subnets ? { for i in range(local.num_public_route_tables) : i => i } : {}
   count = local.create_public_subnets ? local.num_public_route_tables : 0
 
   vpc_id = local.vpc_id
@@ -145,6 +147,25 @@ resource "aws_route_table" "public" {
   )
 }
 
+# TODO workaround to work with the for_each and maps
+locals {
+  az_to_route_table_index = {
+    for idx, az in keys(local.az_to_public_subnet) : az => idx
+  }
+}
+
+resource "aws_route" "public_to_firewall" {
+  for_each = var.create_network_firewall == true && var.enable_network_firewall == true ? local.az_to_public_subnet : {}
+
+  route_table_id         = aws_route_table.public[local.az_to_route_table_index[each.key]].id
+  destination_cidr_block = "0.0.0.0/0"
+  vpc_endpoint_id        = local.firewall_vpce[each.key].endpoint_id
+
+  timeouts {
+    create = "5m"
+  }
+}
+
 resource "aws_route_table_association" "public" {
   count = local.create_public_subnets ? local.len_public_subnets : 0
 
@@ -153,7 +174,7 @@ resource "aws_route_table_association" "public" {
 }
 
 resource "aws_route" "public_internet_gateway" {
-  count = local.create_public_subnets && var.create_igw ? local.num_public_route_tables : 0
+  count = local.create_public_subnets && var.create_igw && var.enable_network_firewall == false ? local.num_public_route_tables : 0
 
   route_table_id         = aws_route_table.public[count.index].id
   destination_cidr_block = "0.0.0.0/0"

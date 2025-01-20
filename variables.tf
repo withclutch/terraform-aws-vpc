@@ -1,4 +1,85 @@
 ################################################################################
+# Network Firewall
+################################################################################
+variable "firewall_subnets" {
+  description = "A list of firewall subnets inside the VPC"
+  type        = list(string)
+  default     = []
+}
+
+variable "create_network_firewall" {
+  description = "Flag to create network firewall"
+  type        = bool
+  default     = false
+}
+
+variable "enable_network_firewall" {
+  description = "Flag to route traffic through network firewall"
+  type        = bool
+  default     = false
+}
+
+variable "firewall_subnet_suffix" {
+  description = "Suffix to append to firewall subnets name"
+  type        = string
+  default     = "firewall"
+}
+
+variable "igw_subnet_suffix" {
+  description = "Suffix to append to IGW subnets name"
+  type        = string
+  default     = "igw"
+}
+
+variable "firewall_subnet_names" {
+  description = "Explicit values to use in the Name tag on firewall subnets. If empty, Name tags are generated"
+  type        = list(string)
+  default     = []
+}
+
+variable "firewall_subnet_tags" {
+  description = "Additional tags for the firewall subnets"
+  type        = map(string)
+  default     = {}
+}
+
+variable "firewall_route_table_tags" {
+  description = "Additional tags for the firewall route tables"
+  type        = map(string)
+  default     = {}
+}
+
+variable "create_multiple_firewall_route_tables" {
+  description = "Indicates whether to create a separate route table for each firewall subnet. Default: `false`"
+  type        = bool
+  default     = false
+}
+
+variable "description" {
+  description = "Description of the network firewall."
+  type        = string
+  default     = null
+}
+
+variable "delete_protection" {
+  description = "A boolean flag indicating whether it is possible to delete the firewall. Defaults to `true`"
+  type        = bool
+  default     = true
+}
+
+variable "subnet_change_protection" {
+  description = "A boolean flag indicating whether it is possible to change the associated subnet(s). Defaults to `true`"
+  type        = bool
+  default     = true
+}
+
+variable "firewall_policy_change_protection" {
+  description = "A boolean flag indicating whether it is possible to change the associated firewall policy. Defaults to `false`"
+  type        = bool
+  default     = true
+}
+
+################################################################################
 # VPC
 ################################################################################
 
