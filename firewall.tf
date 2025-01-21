@@ -35,6 +35,9 @@ locals {
 }
 
 module "firewall" {
+
+  # TODO: only create if `create_network_firewall` is true
+
   source = "terraform-aws-modules/network-firewall/aws"
 
   # Firewall
@@ -45,6 +48,8 @@ module "firewall" {
   delete_protection                 = var.delete_protection
   firewall_policy_change_protection = var.firewall_policy_change_protection
   subnet_change_protection          = var.subnet_change_protection
+
+  # TODO: add validation to require firewall subnets to be defined if `create_network_firewall` is true
 
   vpc_id = local.vpc_id
   subnet_mapping = { for subnet in aws_subnet.firewall : "subnet-${subnet.id}" => {
