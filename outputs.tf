@@ -136,9 +136,9 @@ output "public_route_table_ids" {
   value       = local.public_route_table_ids
 }
 
-output "public_internet_gateway_route_id" {
-  description = "ID of the internet gateway route"
-  value       = try(aws_route.public_internet_gateway[0].id, null)
+output "public_internet_gateway_or_firewall_route_id" {
+  description = "ID of the internet gateway or Firewall route"
+  value       = try(aws_route.public_internet_gateway_or_firewall[0].id, null)
 }
 
 output "public_internet_gateway_ipv6_route_id" {
@@ -709,7 +709,7 @@ output "firewall_status" {
 }
 
 output "network_firewall_arn" {
-  description = "ARN of the Network Firewall"
+  description = "The ARN of the Network Firewall"
   value       = try(module.firewall[0].arn, {})
 }
 

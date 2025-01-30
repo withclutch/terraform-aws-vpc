@@ -163,12 +163,13 @@ resource "aws_route_table_association" "public" {
   route_table_id = element(aws_route_table.public[*].id, var.create_multiple_public_route_tables ? count.index : 0)
 }
 
-resource "aws_route" "public_internet_gateway" {
-  count = local.create_public_subnets && var.create_igw && !(var.enable_network_firewall && local.len_firewall_subnets > 0) ? local.num_public_route_tables : 0
+resource "aws_route" "public_internet_gateway_or_firewall" {
+  count = local.create_public_subnets ? local.num_public_route_tables : 0
 
   route_table_id         = aws_route_table.public[count.index].id
   destination_cidr_block = "0.0.0.0/0"
-  gateway_id             = aws_internet_gateway.this[0].id
+  gateway_id             = var.enable_network_firewall ? null : aws_internet_gateway.this[0].id
+  vpc_endpoint_id        = var.enable_network_firewall ? local.firewall_vpce[aws_subnet.public[count.index].availability_zone].endpoint_id : null
 
   timeouts {
     create = "5m"
@@ -187,18 +188,6 @@ resource "aws_route_table_association" "firewall" {
 
   subnet_id      = element(aws_subnet.firewall.*.id, count.index)
   route_table_id = aws_route_table.firewall[0].id
-}
-
-resource "aws_route" "public_firewall" {
-  count = local.create_vpc && var.enable_network_firewall ? local.len_public_subnets : 0
-
-  route_table_id         = element(aws_route_table.public.*.id, count.index)
-  destination_cidr_block = "0.0.0.0/0"
-  vpc_endpoint_id        = local.firewall_vpce[aws_subnet.public[count.index].availability_zone].endpoint_id
-
-  timeouts {
-    create = "5m"
-  }
 }
 
 resource "aws_route" "public_internet_gateway_ipv6" {

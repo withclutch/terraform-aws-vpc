@@ -18,7 +18,6 @@ module "firewall" {
   firewall_policy_change_protection = var.firewall_policy_change_protection
   subnet_change_protection          = var.firewall_subnet_change_protection
 
-
   vpc_id = aws_vpc.this[0].id
   subnet_mapping = { for subnet_id in aws_subnet.firewall.*.id :
     "subnet-${subnet_id}" => {
