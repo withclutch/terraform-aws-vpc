@@ -57,7 +57,6 @@ module "vpc" {
 
   ######### Firewall Logs ##########
   firewall_logs_retention_in_days = 14
-  firewall_logs_kms_key_arn       = module.kms.key_arn
   create_logging_configuration    = true
 
   ######### Firewall Rules and Filter ##########

@@ -1265,16 +1265,6 @@ variable "firewall_logs_retention_in_days" {
   default     = "90"
 }
 
-variable "firewall_logs_kms_key_arn" {
-  description = "The Amazon Resource Name (ARN) of the key used for encrypting the log group"
-  type        = string
-  default     = null
-}
-
-resource "random_id" "suffix_name" {
-  byte_length = 1
-}
-
 ################################################################################
 # Firewall Subnet
 ################################################################################

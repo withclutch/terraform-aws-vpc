@@ -254,7 +254,7 @@ resource "aws_network_acl_rule" "public_outbound" {
 ################################################################################
 
 locals {
-  create_firewall_subnets = local.create_vpc && local.len_firewall_subnets > 0
+  create_firewall_subnets = local.create_vpc && var.create_network_firewall && local.len_firewall_subnets > 0
 }
 
 resource "aws_subnet" "firewall" {
