@@ -17,7 +17,6 @@ locals {
     local.len_firewall_subnets,
   )
 
-  // TODO - comment what this line does
   firewall_sync_states = try(module.firewall[0].status[0].sync_states, {})
   firewall_vpce = {
     for state in local.firewall_sync_states : state.availability_zone => {
@@ -297,7 +296,7 @@ resource "aws_route_table" "firewall" {
 }
 
 resource "aws_route" "firewall_internet_gateway" {
-  count = local.create_vpc && var.create_igw && local.len_firewall_subnets > 0 ? 1 : 0
+  count = local.create_vpc && var.create_igw && var.create_network_firewall && local.len_firewall_subnets > 0 ? 1 : 0
 
   route_table_id         = aws_route_table.firewall[count.index].id
   destination_cidr_block = "0.0.0.0/0"
@@ -326,10 +325,7 @@ resource "aws_route" "internet_gateway_firewall" {
 
   route_table_id         = aws_route_table.internet_gateway[0].id
   destination_cidr_block = aws_subnet.public[count.index].cidr_block
-
-
-  vpc_endpoint_id = local.firewall_vpce[aws_subnet.public[count.index].availability_zone].endpoint_id // TODO testing
-  #vpc_endpoint_id        = element(local.firewall_endpoint_ids_ordered_by_azs, count.index)
+  vpc_endpoint_id        = local.firewall_vpce[aws_subnet.public[count.index].availability_zone].endpoint_id
 }
 
 ################################################################################

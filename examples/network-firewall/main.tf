@@ -34,7 +34,7 @@ module "vpc" {
   source = "../../"
 
   environment = "test"
-  name        = "nf-example"
+  name        = "fw-example"
 
   ######### VPC ##########
   cidr = "10.0.0.0/16"
