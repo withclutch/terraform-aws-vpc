@@ -1167,6 +1167,202 @@ variable "outpost_acl_tags" {
 }
 
 ################################################################################
+# Firewall
+################################################################################
+
+variable "create_firewall_subnet_route_table" {
+  description = "Whether route table for firewall should be created"
+  type        = bool
+  default     = true
+}
+
+variable "create_network_firewall" {
+  description = "Whether network firewall should be created"
+  type        = bool
+  default     = false
+}
+
+variable "enable_network_firewall" {
+  description = "Whether network firewall should be enabled"
+  type        = bool
+  default     = false
+}
+
+variable "firewall_managed_rules" {
+  description = "List of firewall managed rules"
+  type        = list(string)
+  default     = []
+}
+
+variable "firewall_log_types" {
+  description = "The Types of Network Firewall Logs to send"
+  type        = list(string)
+  default     = ["FLOW", "ALERT"]
+}
+
+variable "firewall_log_tags" {
+  description = "Additional tags for the Firewall Logs"
+  type        = map(string)
+  default     = {}
+}
+
+variable "create_logging_configuration" {
+  description = "Controls if a Logging Configuration should be created"
+  type        = bool
+  default     = false
+}
+
+variable "region" {
+  description = "Main region used to deploy the resources. May differ for multi-region databases"
+  type        = string
+  default     = "us-east-2"
+}
+
+variable "environment" {
+  description = "Environment used to deploy the resources, also used in the naming convention"
+  type        = string
+}
+
+variable "namespace" {
+  description = "The namespace used in the naming convention"
+  type        = string
+  default     = "clutch"
+}
+
+variable "tenant" {
+  description = "The tenant used in the naming convention"
+  type        = string
+  default     = "app"
+}
+
+variable "firewall_description" {
+  description = "Description of the network firewall."
+  type        = string
+  default     = null
+}
+
+variable "firewall_delete_protection" {
+  description = "A boolean flag indicating whether it is possible to delete the firewall. Defaults to `true`"
+  type        = bool
+  default     = true
+}
+
+variable "firewall_subnet_change_protection" {
+  description = "A boolean flag indicating whether it is possible to change the associated subnet(s). Defaults to `true`"
+  type        = bool
+  default     = true
+}
+
+variable "firewall_policy_change_protection" {
+  description = "A boolean flag indicating whether it is possible to change the associated firewall policy. Defaults to `false`"
+  type        = bool
+  default     = true
+}
+
+variable "firewall_logs_retention_in_days" {
+  type        = string
+  description = "Specifies the number of days you want to retain log events in the specified log group. Possible values are: 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827, and 3653."
+  default     = "90"
+}
+
+################################################################################
+# Firewall Subnet
+################################################################################
+
+variable "firewall_subnets" {
+  description = "A list of firewall subnets inside the VPC"
+  type        = list(string)
+  default     = []
+
+  validation {
+    condition     = !(var.create_network_firewall == false && length(var.firewall_subnets) > 0)
+    error_message = "The 'firewall_subnets' variable must be empty when 'create_network_firewall' is false."
+  }
+}
+
+variable "firewall_subnet_assign_ipv6_address_on_creation" {
+  description = "Specify true to indicate that network interfaces created in the specified subnet should be assigned an IPv6 address. Default is `false`"
+  type        = bool
+  default     = false
+}
+
+variable "firewall_subnet_ipv6_prefixes" {
+  description = "Assigns IPv6 firewall subnet id based on the Amazon provided /56 prefix base 10 integer (0-256). Must be of equal length to the corresponding IPv4 subnet list"
+  type        = list(string)
+  default     = []
+}
+
+variable "firewall_subnet_ipv6_native" {
+  description = "Indicates whether to create an IPv6-only subnet. Default: `false`"
+  type        = bool
+  default     = false
+}
+
+variable "firewall_subnet_suffix" {
+  description = "Suffix to append to firewall subnets name"
+  type        = string
+  default     = "firewall"
+}
+
+variable "firewall_subnet_tags" {
+  description = "Additional tags for the firewall subnets"
+  type        = map(string)
+  default     = {}
+}
+
+variable "firewall_route_table_tags" {
+  description = "Additional tags for the firewall route tables"
+  type        = map(string)
+  default     = {}
+}
+
+################################################################################
+# Firewall Network ACLs
+################################################################################
+
+variable "firewall_dedicated_network_acl" {
+  description = "Whether to use dedicated network ACL (not default) and custom rules for firewall subnets"
+  type        = bool
+  default     = false
+}
+
+variable "firewall_inbound_acl_rules" {
+  description = "Firewall subnets inbound network ACLs"
+  type        = list(map(string))
+  default = [
+    {
+      rule_number = 100
+      rule_action = "allow"
+      from_port   = 0
+      to_port     = 0
+      protocol    = "-1"
+      cidr_block  = "0.0.0.0/0"
+    },
+  ]
+}
+
+variable "firewall_outbound_acl_rules" {
+  description = "Firewall subnets outbound network ACLs"
+  type        = list(map(string))
+  default = [
+    {
+      rule_number = 100
+      rule_action = "allow"
+      from_port   = 0
+      to_port     = 0
+      protocol    = "-1"
+      cidr_block  = "0.0.0.0/0"
+    },
+  ]
+}
+
+variable "firewall_acl_tags" {
+  description = "Additional tags for the firewall subnets network ACL"
+  type        = map(string)
+  default     = {}
+}
+
+################################################################################
 # Internet Gateway
 ################################################################################
 
