@@ -1194,6 +1194,30 @@ variable "firewall_managed_rules" {
   default     = []
 }
 
+variable "network_firewall_stateless_rule_group_defaults" {
+  description = "Map of default values which will be used for each stateless rule group."
+  type        = any
+  default     = {}
+}
+
+variable "network_firewall_stateless_rule_group_items" {
+  description = "Maps of items to create a wrapper from. Values are passed through to the module to create the stateless rule groups."
+  type        = any
+  default     = {}
+}
+
+variable "network_firewall_stateful_rule_group_defaults" {
+  description = "Map of default values which will be used for each stateful rule group."
+  type        = any
+  default     = {}
+}
+
+variable "network_firewall_stateful_rule_group_items" {
+  description = "Maps of items to create a wrapper from. Values are passed through to the module to create the stateful rule groups."
+  type        = any
+  default     = {}
+}
+
 variable "firewall_log_types" {
   description = "The Types of Network Firewall Logs to send"
   type        = list(string)
@@ -1206,7 +1230,7 @@ variable "firewall_log_tags" {
   default     = {}
 }
 
-variable "create_logging_configuration" {
+variable "create_network_firewall_logging_configuration" {
   description = "Controls if a Logging Configuration should be created"
   type        = bool
   default     = false
