@@ -1,7 +1,8 @@
 locals {
-  aws_managed_rules_prefix_arn = "arn:aws:network-firewall:${var.region}:aws-managed:stateful-rulegroup"
-  firewall_managed_rules       = distinct(var.firewall_managed_rules)
-  name                         = "${var.name}-network-firewall"
+  aws_managed_rules_prefix_arn    = "arn:aws:network-firewall:${var.region}:aws-managed:stateful-rulegroup"
+  firewall_managed_rules          = distinct(var.firewall_managed_rules)
+  name                            = "${var.name}-network-firewall"
+  network_firewall_default_name   = "network-firewall"
 }
 
 module "firewall" {
@@ -27,21 +28,23 @@ module "firewall" {
 
   ### Logging configuration ###
   create_logging_configuration = var.create_network_firewall_logging_configuration
-  logging_configuration_destination_config = [
-    {
-      log_destination = {
-        logGroup = module.logs_alerts[0].cloudwatch_log_group_name
+  logging_configuration_destination_config = [for log in
+    [
+      {
+        log_destination = {
+          logGroup = try(module.logs_alerts[0].cloudwatch_log_group_name, null)
+        }
+        log_destination_type = "CloudWatchLogs"
+        log_type             = "ALERT"
+      },
+      {
+        log_destination = {
+          logGroup = try(module.logs_flow[0].cloudwatch_log_group_name, null)
+        }
+        log_destination_type = "CloudWatchLogs"
+        log_type             = "FLOW"
       }
-      log_destination_type = "CloudWatchLogs"
-      log_type             = "ALERT"
-    },
-    {
-      log_destination = {
-        logGroup = module.logs_flow[0].cloudwatch_log_group_name
-      }
-      log_destination_type = "CloudWatchLogs"
-      log_type             = "FLOW"
-    },
+    ] : log if contains(var.firewall_log_types, log.log_type)
   ]
 
   encryption_configuration = {
@@ -88,9 +91,9 @@ module "firewall" {
 module "logs_alerts" {
   source = "git::https://github.com/withclutch/terraform-modules-registry?ref=aws-log-group_v1.194"
 
-  count = var.create_network_firewall ? 1 : 0
+  count = var.create_network_firewall && contains(var.firewall_log_types, "ALERT") ? 1 : 0
 
-  name        = "${local.name}-alerts"
+  name        = "${local.network_firewall_default_name}-alerts"
   tenant      = var.tenant
   region      = var.region
   environment = var.environment
@@ -107,9 +110,9 @@ module "logs_alerts" {
 module "logs_flow" {
   source = "git::https://github.com/withclutch/terraform-modules-registry?ref=aws-log-group_v1.194"
 
-  count = var.create_network_firewall ? 1 : 0
+  count = var.create_network_firewall && contains(var.firewall_log_types, "FLOW") ? 1 : 0
 
-  name        = "${local.name}-flow"
+  name        = "${local.network_firewall_default_name}-flow"
   tenant      = var.tenant
   region      = var.region
   environment = var.environment
@@ -127,8 +130,8 @@ module "kms" {
   source = "git::https://github.com/withclutch/terraform-modules-registry?ref=aws-kms_v1.204"
   count  = var.create_network_firewall ? 1 : 0
 
-  name                              = "${local.name}-kms"
-  description                       = "KMS key used for ${local.name} AWS Network Firewall"
+  name                              = "${local.network_firewall_default_name}-kms"
+  description                       = "KMS key used for ${var.name} AWS Network Firewall"
   region                            = var.region
   environment                       = var.environment
   namespace                         = var.namespace
