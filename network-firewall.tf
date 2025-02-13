@@ -1,8 +1,8 @@
 locals {
-  aws_managed_rules_prefix_arn    = "arn:aws:network-firewall:${var.region}:aws-managed:stateful-rulegroup"
-  firewall_managed_rules          = distinct(var.firewall_managed_rules)
-  name                            = "${var.name}-network-firewall"
-  network_firewall_default_name   = "${split("-", var.name)[length(split("-", var.name)) - 1]}-network-firewall"
+  aws_managed_rules_prefix_arn  = "arn:aws:network-firewall:${var.region}:aws-managed:stateful-rulegroup"
+  firewall_managed_rules        = distinct(var.firewall_managed_rules)
+  name                          = "${var.name}-network-firewall"
+  network_firewall_default_name = "${element(split("-", var.name), max(0, length(split("-", var.name)) - 1))}-network-firewall"
 }
 
 module "firewall" {
