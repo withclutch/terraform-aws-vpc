@@ -2,7 +2,7 @@ locals {
   aws_managed_rules_prefix_arn    = "arn:aws:network-firewall:${var.region}:aws-managed:stateful-rulegroup"
   firewall_managed_rules          = distinct(var.firewall_managed_rules)
   name                            = "${var.name}-network-firewall"
-  network_firewall_default_name   = "network-firewall"
+  network_firewall_default_name   = "${split("-", var.name)[length(split("-", var.name)) - 1]}-network-firewall"
 }
 
 module "firewall" {
@@ -130,7 +130,7 @@ module "kms" {
   source = "git::https://github.com/withclutch/terraform-modules-registry?ref=aws-kms_v1.204"
   count  = var.create_network_firewall ? 1 : 0
 
-  name                              = "${local.network_firewall_default_name}-kms"
+  name                              = local.network_firewall_default_name
   description                       = "KMS key used for ${var.name} AWS Network Firewall"
   region                            = var.region
   environment                       = var.environment
