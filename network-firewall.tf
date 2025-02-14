@@ -2,7 +2,6 @@ locals {
   aws_managed_rules_prefix_arn  = "arn:aws:network-firewall:${var.region}:aws-managed:stateful-rulegroup"
   firewall_managed_rules        = distinct(var.firewall_managed_rules)
   name                          = "${var.name}-network-firewall"
-  network_firewall_default_name = "${element(split("-", var.name), max(0, length(split("-", var.name)) - 1))}-network-firewall"
 }
 
 module "firewall" {
@@ -27,28 +26,11 @@ module "firewall" {
   }
 
   ### Logging configuration ###
-  create_logging_configuration = var.create_network_firewall_logging_configuration
-  logging_configuration_destination_config = [for log in
-    [
-      {
-        log_destination = {
-          logGroup = try(module.logs_alerts[0].cloudwatch_log_group_name, null)
-        }
-        log_destination_type = "CloudWatchLogs"
-        log_type             = "ALERT"
-      },
-      {
-        log_destination = {
-          logGroup = try(module.logs_flow[0].cloudwatch_log_group_name, null)
-        }
-        log_destination_type = "CloudWatchLogs"
-        log_type             = "FLOW"
-      }
-    ] : log if contains(var.firewall_log_types, log.log_type)
-  ]
+  create_logging_configuration             = var.create_network_firewall_logging_configuration
+  logging_configuration_destination_config = var.logging_configuration_destination_config
 
   encryption_configuration = {
-    key_id = module.kms[0].key_arn
+    key_id = var.firewall_kms_key_arn
     type   = "CUSTOMER_KMS"
   }
 
@@ -86,58 +68,6 @@ module "firewall" {
   )
 
   tags = var.tags
-}
-
-module "logs_alerts" {
-  source = "git::https://github.com/withclutch/terraform-modules-registry?ref=aws-log-group_v1.194"
-
-  count = var.create_network_firewall && contains(var.firewall_log_types, "ALERT") ? 1 : 0
-
-  name        = "${local.network_firewall_default_name}-alerts"
-  tenant      = var.tenant
-  region      = var.region
-  environment = var.environment
-
-  retention_in_days                  = var.firewall_logs_retention_in_days
-  kms_key_arn                        = module.kms[0].key_arn
-  create_datadog_subscription_filter = true
-
-  tags = merge(var.tags, var.firewall_log_tags)
-
-  depends_on = [module.kms]
-}
-
-module "logs_flow" {
-  source = "git::https://github.com/withclutch/terraform-modules-registry?ref=aws-log-group_v1.194"
-
-  count = var.create_network_firewall && contains(var.firewall_log_types, "FLOW") ? 1 : 0
-
-  name        = "${local.network_firewall_default_name}-flow"
-  tenant      = var.tenant
-  region      = var.region
-  environment = var.environment
-
-  retention_in_days                  = var.firewall_logs_retention_in_days
-  kms_key_arn                        = module.kms[0].key_arn
-  create_datadog_subscription_filter = false
-
-  tags = merge(var.tags, var.firewall_log_tags)
-
-  depends_on = [module.kms]
-}
-
-module "kms" {
-  source = "git::https://github.com/withclutch/terraform-modules-registry?ref=aws-kms_v1.204"
-  count  = var.create_network_firewall ? 1 : 0
-
-  name                              = local.network_firewall_default_name
-  description                       = "KMS key used for ${var.name} AWS Network Firewall"
-  region                            = var.region
-  environment                       = var.environment
-  namespace                         = var.namespace
-  tenant                            = var.tenant
-  tags                              = var.tags
-  allow_usage_in_network_log_groups = true
 }
 
 module "network_firewall_stateless_rule_groups" {

@@ -1283,6 +1283,18 @@ variable "firewall_policy_change_protection" {
   default     = true
 }
 
+variable "firewall_kms_key_arn" {
+  description = "The ARN of the KMS key used to encrypt the logs in the CloudWatch Log Group"
+  type        = string
+  default     = null
+}
+
+variable "logging_configuration_destination_config" {
+  description = "A list of min 1, max 2 configuration blocks describing the destination for the logging configuration"
+  type        = any
+  default     = []
+}
+
 variable "firewall_logs_retention_in_days" {
   type        = number
   description = "Specifies the number of days you want to retain log events in the specified log group. Possible values are: 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827, and 3653."
