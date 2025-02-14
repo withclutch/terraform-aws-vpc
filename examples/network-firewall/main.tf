@@ -5,7 +5,6 @@ provider "aws" {
 locals {
   region      = "us-east-2"
   name_prefix = random_pet.this.id
-  environment = "test"
 }
 
 resource "random_pet" "this" {
@@ -14,16 +13,30 @@ resource "random_pet" "this" {
 }
 
 ################################################################################
-# KMS Module
+# KMS
 ################################################################################
 
-module "kms" {
-  source = "git::https://github.com/withclutch/terraform-modules-registry?ref=aws-kms_v1.204"
+resource "aws_kms_key" "firewall_kms" {
+  description             = "KMS key for Network Firewall logs"
+  deletion_window_in_days = 10
 
-  name                              = "${local.name_prefix}-kms"
-  environment                       = "test"
-  description                       = "KMS key used to test the ${local.name_prefix} AWS Network Firewall"
-  allow_usage_in_network_log_groups = true
+  tags = {
+    Name = "${local.name_prefix}-kms"
+  }
+}
+
+################################################################################
+# Log Groups
+################################################################################
+
+resource "aws_cloudwatch_log_group" "firewall_log_flow" {
+  name              = "${local.name_prefix}-log-flow"
+  retention_in_days = 1
+}
+
+resource "aws_cloudwatch_log_group" "firewall_log_alert" {
+  name              = "${local.name_prefix}-log-alert"
+  retention_in_days = 1
 }
 
 ################################################################################
@@ -33,7 +46,6 @@ module "kms" {
 module "vpc" {
   source = "../../"
 
-  environment = "test"
   name        = "fw-example"
 
   ######### VPC ##########
@@ -52,15 +64,32 @@ module "vpc" {
   one_nat_gateway_per_az = true
 
   ########## Firewall ##########
-  create_network_firewall = true
-  enable_network_firewall = true
+  create_network_firewall    = true
+  enable_network_firewall    = true
+  firewall_kms_key_arn       = aws_kms_key.firewall_kms.arn
+  firewall_delete_protection = false
 
-  ######### Firewall Logs ##########
-  firewall_logs_retention_in_days = 14
-  create_logging_configuration    = true
+  create_network_firewall_logging_configuration = true
+  logging_configuration_destination_config      = [for log in
+    [
+      {
+        log_destination = {
+          logGroup = aws_cloudwatch_log_group.firewall_log_alert.name
+        }
+        log_destination_type = "CloudWatchLogs"
+        log_type             = "ALERT"
+      },
+      {
+        log_destination = {
+          logGroup = aws_cloudwatch_log_group.firewall_log_flow.name
+        }
+        log_destination_type = "CloudWatchLogs"
+        log_type             = "FLOW"
+      }
+    ] : log if contains(["ALERT", "FLOW"], log.log_type)
+  ]
 
   ######### Firewall Rules and Filter ##########
-  firewall_log_types = ["FLOW", "ALERT"]
   firewall_managed_rules = [
     "AbusedLegitMalwareDomainsStrictOrder",
     "BotNetCommandAndControlDomainsStrictOrder",
@@ -82,6 +111,4 @@ module "vpc" {
     "ThreatSignaturesSuspectStrictOrder",
     "ThreatSignaturesBotnetWindowsStrictOrder",
   ]
-
-  depends_on = [module.kms]
 }

@@ -1218,18 +1218,6 @@ variable "network_firewall_stateful_rule_group_items" {
   default     = {}
 }
 
-variable "firewall_log_types" {
-  description = "The Types of Network Firewall Logs to send"
-  type        = list(string)
-  default     = ["FLOW", "ALERT"]
-}
-
-variable "firewall_log_tags" {
-  description = "Additional tags for the Firewall Logs"
-  type        = map(string)
-  default     = {}
-}
-
 variable "create_network_firewall_logging_configuration" {
   description = "Controls if a Logging Configuration should be created"
   type        = bool
@@ -1240,23 +1228,6 @@ variable "region" {
   description = "Main region used to deploy the resources. May differ for multi-region databases"
   type        = string
   default     = "us-east-2"
-}
-
-variable "environment" {
-  description = "Environment used to deploy the resources, also used in the naming convention"
-  type        = string
-}
-
-variable "namespace" {
-  description = "The namespace used in the naming convention"
-  type        = string
-  default     = "clutch"
-}
-
-variable "tenant" {
-  description = "The tenant used in the naming convention"
-  type        = string
-  default     = "app"
 }
 
 variable "firewall_description" {
@@ -1293,12 +1264,6 @@ variable "logging_configuration_destination_config" {
   description = "A list of min 1, max 2 configuration blocks describing the destination for the logging configuration"
   type        = any
   default     = []
-}
-
-variable "firewall_logs_retention_in_days" {
-  type        = number
-  description = "Specifies the number of days you want to retain log events in the specified log group. Possible values are: 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827, and 3653."
-  default     = 90
 }
 
 ################################################################################
